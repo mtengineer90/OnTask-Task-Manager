@@ -7,31 +7,39 @@ import 'package:ontask/models/klasor.dart';
 import 'package:ontask/models/kullanici.dart';
 import 'package:ontask/models/gorev.dart';
 import 'package:ontask/models/ogrenci.dart';
+import 'package:provider/provider.dart';
+import 'package:ontask/gorevler.dart';
 
 class GorevWidget extends StatelessWidget{
-
-  List<Icerik> icerik;
-  GorevWidget(this.icerik);
 
   @override
   Widget build(BuildContext context) {
 
     return ListView.builder(
-        itemCount: icerik.length,
+        itemCount: Provider.of<Gorevler>(context, listen: false).length,
         itemBuilder: (BuildContext ctxt, int index){
-          Icerik item = icerik[index];
-          return ListTile(
-              title: Text(
-                  item.baslik,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize:20,
-                  )
-              ),
-              subtitle: Text(item.aciklama),
-              leading: Icon(
-                item.icon, color:item.renk,
-              )
+        Icerik item = Provider.of<Gorevler>(context, listen: false).get(index);
+          return Dismissible(
+            key: ValueKey("item_$index"),
+            direction: DismissDirection.horizontal,
+            movementDuration: Duration(milliseconds: 300),
+            onDismissed: (direction){
+              print("sil");
+              Provider.of<Gorevler>(context, listen: false).remove(item);
+            },
+            child: ListTile(
+                title: Text(
+                    item.baslik,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize:20,
+                    )
+                ),
+                subtitle: Text(item.aciklama),
+                leading: Icon(
+                  item.icon, color:item.renk,
+                )
+            ),
           );
         }
     );

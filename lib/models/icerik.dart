@@ -9,6 +9,8 @@ abstract class Icerik{
   String aciklama;
   IconData icon;
   Color renk;
+  DateTime olusturmaZamani;
+  DateTime sonDegisimZamani;
 
   Icerik(baslik, favori, secured, sifre, aciklama, icon, renk){
     this.baslik;
@@ -18,5 +20,7 @@ abstract class Icerik{
     this.aciklama;
     this.icon;
     this.renk;
+    this.olusturmaZamani=DateTime.now();
+    this.sonDegisimZamani=DateTime.now();
   }
 }

@@ -10,6 +10,8 @@ import 'package:ontask/widgets/gorevWidget.dart';
 //import 'package:ontask/widgets/gorevWidget.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:ontask/widgets/ekleKlasor.dart';
+import 'package:ontask/widgets/drawMenu.dart';
 
 void main() {
   runApp(MyApp());
@@ -43,12 +45,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin{
   int _counter = 0;
 
-  static List<Icerik> _icerik = List<Icerik>.generate(
-      5, (index) => Gorev(
-    "Başlık $index", false, false, null, "Açıklama $index",
-    Colors.primaries[new Random().nextInt(Colors.primaries.length-1)]
-  ));
-
+  Gorevler gorevler = Gorevler();
 
   void _icerikEkle(String isim){
     setState(() {
@@ -78,7 +75,7 @@ case "Gorev":{
       break;
       }
     }
-    _icerik.add(item);
+    gorevler.add(item);
     });
   }
 
@@ -86,14 +83,12 @@ case "Gorev":{
   Widget build(BuildContext context) {
 
     return ChangeNotifierProvider(
-      create: (_) => new Gorevler(),
+      create: (context) => gorevler,
         child: Scaffold(
           appBar: AppBar(
             title: Text("${widget.title} $_counter"),
           ),
-          body: Center(
-            child: GorevWidget(_icerik),
-          ),
+          body: GorevWidget(),
           floatingActionButton: SpeedDial(
             animatedIcon: AnimatedIcons.menu_close,
             overlayColor: Colors.white,
@@ -118,7 +113,9 @@ case "Gorev":{
                 child: Icon(Icons.note, color: Colors.white),
                 label: "Görev Ekle",
                 backgroundColor: Colors.green,
-                onTap: ()=> _icerikEkle("Görev"),
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>EkleKlasor()));
+                }
               ),
             ],
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ontask/models/icerik.dart';
 import 'package:ontask/models/checkbox.dart';
+import 'package:ontask/models/icerik.dart';
 
 class Liste extends Icerik{
   List<Checkbox> listCheckbox;

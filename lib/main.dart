@@ -10,8 +10,9 @@ import 'package:ontask/widgets/gorevWidget.dart';
 //import 'package:ontask/widgets/gorevWidget.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:ontask/widgets/ekleKlasor.dart';
+import 'package:ontask/widgets/ekleGorev.dart';
 import 'package:ontask/widgets/drawMenu.dart';
+import 'package:ontask/widgets/flMenu.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,11 +47,24 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   int _counter = 0;
 
   Gorevler gorevler = Gorevler();
+  
+  void _favIcerik(Icerik item){
+    setState(() {
+      item.favori = !item.favori;
+    });
+  }
+
+  void _icerikSil(Icerik item){
+    setState(() {
+      gorevler.remove(item);
+    });
+  }
 
   void _icerikEkle(String isim){
     setState(() {
       _counter++;
       Icerik item;
+
       switch(isim)
 {
         case "Klasor":{
@@ -85,10 +99,29 @@ case "Gorev":{
     return ChangeNotifierProvider(
       create: (context) => gorevler,
         child: Scaffold(
+          drawer: DrawMenu(),
           appBar: AppBar(
             title: Text("${widget.title} $_counter"),
           ),
-          body: GorevWidget(),
+          body: GorevWidget(
+            silIcerik: (Icerik item){
+              setState(() {
+                _icerikSil(item);
+              });
+            },
+            favIcerik: (Icerik item){
+              setState(() {
+                _favIcerik(item);
+              });
+            },
+          ),
+          floatingActionButton: FloatingMenu(
+            ekleIcerik: (String isim) {
+              setState(() {
+                _icerikEkle(isim);
+              });
+            },),
+/*
           floatingActionButton: SpeedDial(
             animatedIcon: AnimatedIcons.menu_close,
             overlayColor: Colors.white,
@@ -114,11 +147,12 @@ case "Gorev":{
                 label: "Görev Ekle",
                 backgroundColor: Colors.green,
                 onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>EkleKlasor()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>EkleGorev()));
                 }
               ),
             ],
           ),
+*/
         ),
     );
   }

@@ -16,9 +16,10 @@ class DrawMenu extends StatelessWidget{
             ),
             decoration: BoxDecoration(
                 color: Colors.green,
-                image: DecorationImage(
+/*                image: DecorationImage(
                     fit: BoxFit.fill,
-                    image: AssetImage('assets/images/cover.jpg'))),
+                    image: AssetImage('assets/images/cover.jpg')),*/
+            ),
           ),
 
           ListTile(

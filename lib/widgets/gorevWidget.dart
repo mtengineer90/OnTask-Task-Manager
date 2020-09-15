@@ -59,11 +59,7 @@ class GorevWidget extends StatelessWidget{
                             ),
                             onPressed: () {
                               silIcerik(item);
-                              //Provider.of<Gorevler>(context, listen: false).remove(item);
-//                              Scaffold
-//                                  .of(context)
-//                                  .showSnackBar(SnackBar(content: Text("${item.baslik} arşivlendi!")));
-                              Navigator.of(context).pop();
+                             Navigator.of(context).pop();
                             },
                           ),
                         ],

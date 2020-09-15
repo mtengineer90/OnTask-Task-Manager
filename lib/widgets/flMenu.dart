@@ -1,17 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:ontask/gorevler.dart';
 import 'package:ontask/widgets/ekleGorev.dart';
-import 'package:provider/provider.dart';
+import 'package:ontask/models/icerik.dart';
 
-typedef IcerikCallback = void Function(String isim);
+typedef IcerikEkleIcerikCallback = void Function(String isim);
+typedef IcerikEkleItemCallback = void Function(Icerik item);
 
 class FloatingMenu extends StatelessWidget {
 
-  final IcerikCallback ekleIcerik;
+  final IcerikEkleIcerikCallback ekleIcerik;
+  final IcerikEkleItemCallback ekleItem;
 
-  FloatingMenu({this.ekleIcerik});
+  FloatingMenu({this.ekleIcerik, this.ekleItem});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,7 @@ class FloatingMenu extends StatelessWidget {
             backgroundColor: Colors.green,
             onTap: () {
 //              main.addContent("Note");
-              Navigator.push(context,MaterialPageRoute(builder: (context) => EkleGorev()));
+              Navigator.push(context,MaterialPageRoute(builder: (context) => EkleGorev(ekleItem: ekleItem)));
             }),
       ],
     );

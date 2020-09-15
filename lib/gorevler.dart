@@ -3,8 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:ontask/models/icerik.dart';
 import 'package:flutter/material.dart';
 import 'package:ontask/models/gorev.dart';
-import 'package:ontask/models/liste.dart';
-import 'package:ontask/models/klasor.dart';
 
 class Gorevler with ChangeNotifier{
 
@@ -18,15 +16,35 @@ class Gorevler with ChangeNotifier{
   );
 
   get gorevler{
-    return _gorevler;
+    return _gorevler.where((e) => e.silindiMi == false).toList();
+  }
+
+  get favoriler{
+    return _gorevler.where((e) => e.favori == true).toList();
+  }
+
+  get gorevlerSilinmis{
+    return _gorevler.where((e) => e.silindiMi == true).toList();
   }
 
   get length{
-    return _gorevler.length;
+    return gorevler.length;
+  }
+
+  get lengthFav{
+    return favoriler.length;
+  }
+
+  get lengthSilinmis{
+    return gorevlerSilinmis.length;
   }
 
   Icerik get(int index){
-    return _gorevler[index];
+    return gorevler[index];
+  }
+
+  Icerik getSilinmis(int index){
+    return gorevlerSilinmis[index];
   }
 
   void add(Icerik item){
@@ -35,59 +53,9 @@ class Gorevler with ChangeNotifier{
   }
 
   void remove(Icerik item){
-    _gorevler.remove(item);
+    gorevler.remove(item);
+    item.silindiMi = true;
     notifyListeners();
   }
 }
-// Add type
-//  void addContent(String name) {
-//
-//    /// Update the counter and refresh the vue
-//    counter++;
-//
-//    // Factory
-//    switch(name) {
-//
-//      case "Folder": {
-//        notes.add(Folder(
-//            "Folder title N°$counter",
-//            false,
-//            false,
-//            null,
-//            "description N°$counter",
-//            Colors.primaries[new Random().nextInt(Colors.primaries.length-1)]
-//        ));
-//        break;
-//      }
-//
-//      case "Note": {
-//        notes.add(Note(
-//            "Note title N°$counter",
-//            false,
-//            false,
-//            null,
-//            "description N°$counter",
-//            Colors.primaries[new Random().nextInt(Colors.primaries.length-1)]
-//        ));
-//        break;
-//      }
-//
-//      case "CheckList": {
-//        notes.add(CheckList(
-//            "CheckList title N°$counter",
-//            false,
-//            false,
-//            null,
-//            "description N°$counter",
-//            Colors.primaries[new Random().nextInt(Colors.primaries.length-1)]
-//        ));
-//        break;
-//      }
-//    }
-//
-//    print(counter);
-//    print(_notes);
-//
-//    notifyListeners();
-//  }
 

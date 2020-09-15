@@ -11,6 +11,7 @@ abstract class Icerik{
   Color renk;
   DateTime olusturmaZamani;
   DateTime sonDegisimZamani;
+  bool silindiMi;
 
   Icerik(baslik, favori, secured, sifre, aciklama, icon, renk){
     this.baslik;
@@ -22,5 +23,6 @@ abstract class Icerik{
     this.renk;
     this.olusturmaZamani=DateTime.now();
     this.sonDegisimZamani=DateTime.now();
+    this.silindiMi = false;
   }
 }

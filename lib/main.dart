@@ -13,6 +13,8 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:ontask/widgets/ekleGorev.dart';
 import 'package:ontask/widgets/drawMenu.dart';
 import 'package:ontask/widgets/flMenu.dart';
+import 'package:ontask/ayarlar/sabitler.dart';
+import 'dart:ui' as ui;
 
 void main() {
   runApp(MyApp());
@@ -25,8 +27,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'OnTask Görev Yöneticisi',
       theme: ThemeData(
-
-        primarySwatch: Colors.orange,
+        primarySwatch: RenkPaleti.BEYAZ,
+        backgroundColor: Colors.white,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(title: 'OnTask Görev Yöneticisi'),
@@ -47,7 +49,27 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   int _counter = 0;
 
   Gorevler gorevler = Gorevler();
-  
+
+  void _ekleItem(Icerik item){
+    setState(() {
+      gorevler.add(item);
+    });
+  }
+
+  int _seciliIndex = 0;
+
+  void _seciliItem(int index){
+    setState(() {
+      _seciliIndex = index;
+
+      switch(_seciliIndex){
+        case 1:
+          gosterEkleModel(context);
+          break;
+      }
+    });
+  }
+
   void _favIcerik(Icerik item){
     setState(() {
       item.favori = !item.favori;
@@ -100,9 +122,9 @@ case "Gorev":{
       create: (context) => gorevler,
         child: Scaffold(
           drawer: DrawMenu(),
-          appBar: AppBar(
-            title: Text("${widget.title} $_counter"),
-          ),
+//          appBar: AppBar(
+//            title: Text("${widget.title} $_counter"),
+//          ),
           body: GorevWidget(
             silIcerik: (Icerik item){
               setState(() {
@@ -115,45 +137,124 @@ case "Gorev":{
               });
             },
           ),
+          bottomNavigationBar: BottomNavigationBar(
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (Rect bounds) {
+                    return ui.Gradient.linear(
+                      Offset(4.0, 24.0),
+                      Offset(24.0, 4.0),
+                      [
+                        RenkPaleti.colorStart,
+                        RenkPaleti.colorEnd,
+                      ],
+                    );
+                  },
+                  child: Icon(Icons.favorite_border),
+                ),
+                title: Container(),
+              ),
+
+              BottomNavigationBarItem(
+                icon: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (Rect bounds) {
+                    return ui.Gradient.linear(
+                      Offset(4.0, 24.0),
+                      Offset(24.0, 4.0),
+                      [
+                        RenkPaleti.colorStart,
+                        RenkPaleti.colorEnd,
+                      ],
+                    );
+                  },
+                  child: Icon(Icons.add_circle_outline),
+                ),
+                title: Container(),
+              ),
+
+              BottomNavigationBarItem(
+                icon: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (Rect bounds) {
+                    return ui.Gradient.linear(
+                      Offset(4.0, 24.0),
+                      Offset(24.0, 4.0),
+                      [
+                        RenkPaleti.colorStart,
+                        RenkPaleti.colorEnd,
+                      ],
+                    );
+                  },
+                  child: Icon(Icons.restore_from_trash),
+                ),
+                title: Container(),
+              ),
+
+            ],
+            currentIndex: _seciliIndex,
+            onTap: _seciliItem,
+          ),
           floatingActionButton: FloatingMenu(
             ekleIcerik: (String isim) {
               setState(() {
                 _icerikEkle(isim);
               });
-            },),
-/*
-          floatingActionButton: SpeedDial(
-            animatedIcon: AnimatedIcons.menu_close,
-            overlayColor: Colors.white,
-            overlayOpacity: 0.60,
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            shape: CircleBorder(),
-            children: [
-              SpeedDialChild(
-                child: Icon(Icons.folder, color: Colors.white),
-                label: "Klasör Ekle",
-                backgroundColor: Colors.pink,
-                onTap: ()=> _icerikEkle("Klasör"),
-              ),
-              SpeedDialChild(
-                child: Icon(Icons.format_list_bulleted, color: Colors.white),
-                label: "Liste Ekle",
-                backgroundColor: Colors.pinkAccent,
-                onTap: ()=> _icerikEkle("Liste"),
-              ),
-              SpeedDialChild(
-                child: Icon(Icons.note, color: Colors.white),
-                label: "Görev Ekle",
-                backgroundColor: Colors.green,
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>EkleGorev()));
-                }
-              ),
-            ],
+            },
+          ekleItem: (Icerik item){
+              setState(() {
+                _ekleItem(item);
+              });
+          }
           ),
-*/
         ),
     );
   }
-}
+
+
+void gosterEkleModel(context) {
+  showModalBottomSheet(
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      backgroundColor: Colors.white,
+      context: context,
+      builder: (BuildContext bc){
+        return Container(
+          child: new Wrap(
+            children: <Widget>[
+              new ListTile(
+                  leading: new Icon(Icons.note_add),
+                  title: new Text('Görev'),
+                  onTap: () => {
+                    Navigator.push(context,MaterialPageRoute(builder: (context) => EkleGorev(ekleItem: _ekleItem,))),
+                  }
+              ),
+
+              new ListTile(
+                leading: new Icon(Icons.playlist_add_check),
+                title: new Text('Liste'),
+                onTap: () => {
+                  Navigator.pop(context),
+                  _icerikEkle("Liste"),
+                },
+              ),
+
+              new ListTile(
+                leading: new Icon(Icons.create_new_folder),
+                title: new Text('Klasör'),
+                onTap: () => {
+                  Navigator.pop(context),
+                  _icerikEkle("Klasör"),
+                },
+              ),
+
+            ],
+          ),
+        );
+      }
+  );
+}}

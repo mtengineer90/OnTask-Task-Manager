@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:ontask/models/icerik.dart';
 import 'package:ontask/models/gorev.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:ontask/ayarlar/sabitler.dart';
 
 typedef IcerikCallback = void Function(Icerik item);
 
 class EkleGorev extends StatefulWidget {
-
   final Gorev item;
 
   final IcerikCallback ekleItem;
@@ -18,8 +19,8 @@ class EkleGorev extends StatefulWidget {
   EkleGorevState createState() => EkleGorevState();
 }
 
-class EkleGorevState extends State<EkleGorev> with SingleTickerProviderStateMixin {
-
+class EkleGorevState extends State<EkleGorev>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
   //Gorev item = Gorev("",false,false,null,"",Colors.greenAccent);
@@ -39,11 +40,55 @@ class EkleGorevState extends State<EkleGorev> with SingleTickerProviderStateMixi
     });
   }
 
-  @override
-  void dispose() {
-    baslikText.dispose();
-    aciklamaText.dispose();
-    super.dispose();
+  void hatirlat() {
+    print(widget.item.sonZaman);
+
+    setState(() {
+      /// Boş ise zamanı al
+      if (widget.item.sonZaman == null) {
+        widget.item.sonZaman = DateTime.now();
+
+        showModalBottomSheet(
+            context: context,
+            builder: (BuildContext builder) {
+              return Container(
+                height: MediaQuery.of(context).copyWith().size.height / 3,
+                child: CupertinoTheme(
+                  data: CupertinoThemeData(
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(
+                        color: RenkPaleti.ACIK_KIRMIZI,
+                      ),
+                    ),
+                    primaryColor: RenkPaleti.ACIK_KIRMIZI,
+                    primaryContrastingColor: RenkPaleti.ACIK_KIRMIZI,
+                    scaffoldBackgroundColor: RenkPaleti.ACIK_KIRMIZI,
+                    barBackgroundColor: RenkPaleti.ACIK_KIRMIZI,
+                    brightness: Brightness.light,
+                  ),
+                  child: CupertinoDatePicker(
+                    onDateTimeChanged: (DateTime newDate) {
+                      setState(() {
+                        widget.item.sonZaman = newDate;
+                      });
+                    },
+                    initialDateTime: DateTime.now().add(Duration(minutes: 1)),
+                    use24hFormat: true,
+                    minimumDate: DateTime.now(),
+                    maximumDate: DateTime.now().add(Duration(days: 365 * 30)),
+                    minimumYear: DateTime.now().year,
+                    maximumYear: DateTime.now().year + 20,
+                    minuteInterval: 1,
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    backgroundColor: CupertinoColors.white,
+                  ),
+                ),
+              );
+            });
+      } else {
+        widget.item.sonZaman = null;
+      }
+    });
   }
 
   void renkDegistir(Color renk) {
@@ -53,7 +98,6 @@ class EkleGorevState extends State<EkleGorev> with SingleTickerProviderStateMixi
   }
 
   void kaydet() {
-
     print(baslikText.text);
     widget.item.baslik = baslikText.text;
 
@@ -64,38 +108,99 @@ class EkleGorevState extends State<EkleGorev> with SingleTickerProviderStateMixi
     print(widget.item.renk.toString());
 
     widget.ekleItem(widget.item);
+
+    widget.item.editZamani = DateTime.now();
+
     Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    baslikText.dispose();
+    aciklamaText.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      appBar: AppBar(
-        actions: <Widget>[
-          IconButton(
-            icon: (widget.item.favori ? Icon(Icons.favorite) : Icon(Icons.favorite_border)),
-            color: Colors.red[500],
-            onPressed: () {
-              this.fav();
-            },
-          ),
+    baslikText.text = widget.item.baslik;
+    aciklamaText.text = widget.item.aciklama;
 
+    return Scaffold(
+      extendBodyBehindAppBar: false,
+      appBar: AppBar(
+
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: RenkPaleti.ACIK_KIRMIZI),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+
+        actions: <Widget>[
+          /// Renk Seç
           IconButton(
-            icon: (Icon(Icons.color_lens)),
+            icon: (FaIcon(FontAwesomeIcons.solidCircle)),
             color: widget.item.renk != null ? widget.item.renk : Colors.white70,
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Renk Seçiniz'),
-                    content: SingleChildScrollView(
-                      child: BlockPicker(
-                        pickerColor: widget.item.renk,
-                        onColorChanged: (renk) {
-                          renkDegistir(renk);
-                        },
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(50),
+                          topRight: Radius.circular(50),
+                          bottomLeft: Radius.circular(50),
+                          bottomRight: Radius.circular(50)
+                      ),
+                    ),
+                    content: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 0,
+                      ),
+                      margin: EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        textDirection: TextDirection.ltr,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            'Renkler',
+                            style: TextStyle(
+                              fontSize: 30,
+                              color: RenkPaleti.ACIK_KIRMIZI,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          /// RenkPalet
+                          SingleChildScrollView(
+                            padding: EdgeInsets.only(
+                              top: 25, bottom:0,
+                            ),
+                            child: BlockPicker(
+                              availableColors: RenkPaleti.LIST_RENKPALET,
+                              pickerColor: widget.item.renk,
+                              onColorChanged: (renk) {
+                                renkDegistir(renk);
+                              },
+                            ),
+                          ),
+
+                        ],
                       ),
                     ),
                   );
@@ -105,63 +210,243 @@ class EkleGorevState extends State<EkleGorev> with SingleTickerProviderStateMixi
           ),
 
           IconButton(
-            icon: (Icon(Icons.delete_outline, color: Colors.red)),
+            icon: (widget.item.sonZaman != null ? Icon(Icons.alarm) : Icon(Icons.add_alarm)),
+            color: RenkPaleti.ACIK_KIRMIZI,
+            onPressed: () {
+              this.hatirlat();
+            },
+          ),
+
+          IconButton(
+            icon: (widget.item.favori ? Icon(Icons.bookmark) : Icon(Icons.bookmark_border)),
+            color: RenkPaleti.ACIK_KIRMIZI,
+            onPressed: () {
+              this.fav();
+            },
+          ),
+
+          IconButton(
+            icon: (widget.item.favori ? Icon(Icons.lock_outline) : Icon(Icons.lock_open)),
+            color: RenkPaleti.ACIK_KIRMIZI,
+            onPressed: () {
+              /// TODO: Sfre Model
+              this.fav();
+            },
+          ),
+
+          IconButton(
+            icon: (Icon(Icons.delete_outline, color: RenkPaleti.ACIK_KIRMIZI,)),
             onPressed: () {
               this.sil();
             },
           ),
+
           IconButton(
-            icon: (Icon(Icons.check, color: Colors.green)),
+            icon: (Icon(Icons.check,color: Colors.green,)),
             onPressed: () {
               this.kaydet();
             },
           ),
+
         ],
       ),
       body: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 10,
+            bottom: 15,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
 
-            TextFormField(
-              controller: baslikText,
-              decoration: InputDecoration(
-                  hintText: "Başlık"
+              Container(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 2,
+                  bottom: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
+                      bottomRight: Radius.circular(10)
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.15),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: Offset(0, 3), // changes position of shadow
+                    ),
+                  ],
+                ),
+                child: TextFormField(
+                  controller: baslikText,
+                  decoration: InputDecoration(
+                    hintText: "Başlık...",
+                    hintStyle: TextStyle(
+                      fontSize: 23,
+                      color: Colors.pinkAccent[100],
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return 'Başlık...';
+                    }
+                    return null;
+                  },
+                ),
               ),
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Lütfen Başlık Giriniz...';
-                }
-                return null;
-              },
-            ),
 
-            TextFormField(
-              controller: aciklamaText,
-              decoration: InputDecoration(
-                  hintText: "İçerik"
+              Expanded(
+                child:
+                Container(
+                  margin: EdgeInsets.only(
+                    top: 25,
+                  ),
+                  padding: EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 2,
+                    bottom: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10)
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.15),
+                        spreadRadius: 5,
+                        blurRadius: 7,
+                        offset: Offset(0, 3), // changes position of shadow
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    expands: true,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    controller: aciklamaText,
+                    decoration: InputDecoration(
+                      hintText: "Görev Açıklaması...",
+                      hintStyle: TextStyle(
+                        fontSize: 23,
+                        color: Colors.pinkAccent[100],
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'Açıklamalarınız...';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
               ),
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Lütfen İçerik Giriniz...';
-                }
-                return null;
-              },
-            ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: RaisedButton(
-                onPressed: () {
-                  if (_formKey.currentState.validate()) {
-                      this.kaydet();
-                  }
-                },
-                child: Text('Kaydet'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 20,
+                      bottom: 20,
+                    ),
+                    child: RaisedButton(
+                      onPressed: () {
+                        // Check if valid
+                        this.sil();
+                      },
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                      padding: EdgeInsets.all(0),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xfffb6c72), Color(0xffff988d)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(50.0)
+                        ),
+                        child: Container(
+                          constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            'İptal',
+                            style: TextStyle(
+                              fontSize: 27,
+                              fontFamily: "Roboto",
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 20,
+                      bottom: 20,
+                    ),
+                    child: RaisedButton(
+                      onPressed: () {
+                        // Check if valid
+                        if (_formKey.currentState.validate()) {
+                          this.kaydet();
+                        }
+                      },
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                      padding: EdgeInsets.all(0.0),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xff69d9cc), Color(0xff50ff8c)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(50.0)
+                        ),
+                        child: Container(
+                          constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            'Oluştur',
+                            style: TextStyle(
+                              fontSize: 27,
+                              fontFamily: "Roboto",
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

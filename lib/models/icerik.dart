@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:ontask/ayarlar/sabitler.dart';
 
 abstract class Icerik{
   String baslik;
@@ -25,4 +26,17 @@ abstract class Icerik{
     this.sonDegisimZamani=DateTime.now();
     this.silindiMi = false;
   }
+  String getAciklama();
+
+  Color getRenk() {
+
+    if(this.renk == null) {
+
+      return RenkPaleti.randomColor();
+    }
+
+    return this.renk;
+  }
+
+  IconData getIcon();
 }

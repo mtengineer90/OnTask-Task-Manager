@@ -10,8 +10,11 @@ class Gorevler with ChangeNotifier{
 
   static List<Icerik> _gorevler = List<Icerik>.generate(
     3, (index)=>Gorev(
-    "Başlık $index", false, false, null, "Açıklama $index",
-    Colors.primaries[new Random().nextInt(Colors.primaries.length-1)]
+    "Mobil Uygulama Geliştirme $index", false, false, null,
+      "Mobil uygulama geliştirme, kişisel dijital yardımcılar, kurumsal dijital yardımcılar veya cep telefonları gibi mobil cihazlar için bir mobil uygulamanın geliştirildiği eylem veya süreçtir.",
+    //Colors.primaries[new Random().nextInt(Colors.primaries.length-1)],
+    null,
+  null,
   )
   );
 

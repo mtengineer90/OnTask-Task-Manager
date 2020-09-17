@@ -130,7 +130,6 @@ List<Icerik> _gorevler = List<Icerik>();
       "Mobil uygulama geliştirme, kişisel dijital yardımcılar, kurumsal dijital yardımcılar veya cep telefonları gibi mobil cihazlar için bir mobil uygulamanın geliştirildiği eylem veya süreçtir.",
       //Colors.primaries[new Random().nextInt(Colors.primaries.length-1)],
       null,
-      null,
     )
     );
   }

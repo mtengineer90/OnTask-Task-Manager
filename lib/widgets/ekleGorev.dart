@@ -2,9 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ontask/models/icerik.dart';
 import 'package:ontask/models/gorev.dart';
+import 'package:ontask/models/liste.dart';
+import 'package:ontask/models/checkbox.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:ontask/ayarlar/sabitler.dart';
+import 'package:flutter/rendering.dart';
 
 typedef IcerikCallback = void Function(Icerik item);
 
@@ -23,14 +26,27 @@ class EkleGorevState extends State<EkleGorev>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
-  //Gorev item = Gorev("",false,false,null,"",Colors.greenAccent);
-
   final baslikText = TextEditingController();
   final aciklamaText = TextEditingController();
+
+  final baslikTextTodoList = TextEditingController();
+  final currentTextTodoList = TextEditingController();
 
   void fav() {
     setState(() {
       widget.item.favori = !widget.item.favori;
+    });
+  }
+
+  void secure(String sifre) {
+    setState(() {
+      widget.item.secure(sifre);
+    });
+  }
+
+  void unSecure() {
+    setState(() {
+      widget.item.unSecure();
     });
   }
 
@@ -40,21 +56,12 @@ class EkleGorevState extends State<EkleGorev>
     });
   }
 
-  void koru(){
-    setState(() {
-      widget.item.secured = !widget.item.secured;
-    });
-  }
-
-
   void hatirlat() {
     print(widget.item.sonZaman);
 
     setState(() {
       /// Boş ise zamanı al
       if (widget.item.sonZaman == null) {
-        widget.item.sonZaman = DateTime.now();
-
         showModalBottomSheet(
             context: context,
             builder: (BuildContext builder) {
@@ -105,18 +112,16 @@ class EkleGorevState extends State<EkleGorev>
   }
 
   void kaydet() {
-    print(baslikText.text);
     widget.item.baslik = baslikText.text;
-
-    print(aciklamaText.text);
     widget.item.aciklama = aciklamaText.text;
-
-    print("Renk: ");
-    print(widget.item.renk.toString());
-
     widget.ekleItem(widget.item);
 
-    widget.item.editZamani = DateTime.now();
+    widget.item.sonDegisimZamani = DateTime.now();
+
+    if(widget.item.sonZaman != null) {
+      widget.item.showNotification();
+    }
+    Navigator.pop(context);
 
     Navigator.pop(context);
   }
@@ -147,7 +152,6 @@ class EkleGorevState extends State<EkleGorev>
         ),
 
         actions: <Widget>[
-          /// Renk Seç
           IconButton(
             icon: (FaIcon(FontAwesomeIcons.solidCircle)),
             color: widget.item.renk != null ? widget.item.renk : Colors.white70,
@@ -233,11 +237,11 @@ class EkleGorevState extends State<EkleGorev>
           ),
 
           IconButton(
-            icon: (widget.item.secured ? Icon(EkleIcon.kilit) : Icon(EkleIcon.anahtar)),
+            icon: (widget.item.sifre!=null ? Icon(EkleIcon.kilit) : Icon(EkleIcon.anahtar)),
             color: RenkPaleti.ACIK_KIRMIZI,
-            onPressed: () {
-              this.koru();
-            },
+/*            onPressed: () {
+              this.secure(sifre);
+            },*/
           ),
 
           IconButton(
@@ -256,21 +260,73 @@ class EkleGorevState extends State<EkleGorev>
 
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: 10,
-            bottom: 15,
-            left: 20,
-            right: 20,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
+      body: gosterNot(),
+    );
+  }
+  Form gosterNot(){
+    return Form(
+      key: _formKey,
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: 10,
+          bottom: 15,
+          left: 20,
+          right: 20,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
 
+            Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 2,
+                bottom: 2,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10)
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.15),
+                    spreadRadius: 5,
+                    blurRadius: 7,
+                    offset: Offset(0, 3), // changes position of shadow
+                  ),
+                ],
+              ),
+              child: TextFormField(
+                controller: baslikText,
+                decoration: InputDecoration(
+                  hintText: "Başlık...",
+                  hintStyle: TextStyle(
+                    fontSize: 23,
+                    color: Colors.pinkAccent[100],
+                  ),
+                  border: InputBorder.none,
+                ),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Başlık...';
+                  }
+                  return null;
+                },
+              ),
+            ),
+
+            Expanded(
+              child:
               Container(
+                margin: EdgeInsets.only(
+                  top: 25,
+                ),
                 padding: EdgeInsets.only(
                   left: 20,
                   right: 20,
@@ -295,9 +351,12 @@ class EkleGorevState extends State<EkleGorev>
                   ],
                 ),
                 child: TextFormField(
-                  controller: baslikText,
+                  expands: true,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: null,
+                  controller: aciklamaText,
                   decoration: InputDecoration(
-                    hintText: "Başlık...",
+                    hintText: "Açıklamalarınız...",
                     hintStyle: TextStyle(
                       fontSize: 23,
                       color: Colors.pinkAccent[100],
@@ -306,153 +365,101 @@ class EkleGorevState extends State<EkleGorev>
                   ),
                   validator: (value) {
                     if (value.isEmpty) {
-                      return 'Başlık...';
+                      return 'Açıklamalarınız...';
                     }
                     return null;
                   },
                 ),
               ),
+            ),
 
-              Expanded(
-                child:
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+
                 Container(
-                  margin: EdgeInsets.only(
-                    top: 25,
+                  margin: const EdgeInsets.only(
+                    top: 20,
+                    bottom: 20,
                   ),
-                  padding: EdgeInsets.only(
-                    left: 20,
-                    right: 20,
-                    top: 2,
-                    bottom: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                        bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10)
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.15),
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3), // changes position of shadow
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    expands: true,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    controller: aciklamaText,
-                    decoration: InputDecoration(
-                      hintText: "Görev Açıklaması...",
-                      hintStyle: TextStyle(
-                        fontSize: 23,
-                        color: Colors.pinkAccent[100],
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    validator: (value) {
-                      if (value.isEmpty) {
-                        return 'Açıklamalarınız...';
-                      }
-                      return null;
+                  child: RaisedButton(
+                    onPressed: () {
+                      // Check if valid
+                      this.sil();
                     },
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                    padding: EdgeInsets.all(0),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xfffb6c72), Color(0xffff988d)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(50.0)
+                      ),
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                        alignment: Alignment.center,
+                        padding: EdgeInsets.all(10),
+                        child: Text(
+                          'İptal',
+                          style: TextStyle(
+                            fontSize: 27,
+                            fontFamily: "Roboto",
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-
-                  Container(
-                    margin: const EdgeInsets.only(
-                      top: 20,
-                      bottom: 20,
-                    ),
-                    child: RaisedButton(
-                      onPressed: () {
-                        // Check if valid
-                        this.sil();
-                      },
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
-                      padding: EdgeInsets.all(0),
-                      child: Ink(
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xfffb6c72), Color(0xffff988d)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(50.0)
-                        ),
-                        child: Container(
-                          constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
-                          alignment: Alignment.center,
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            'İptal',
-                            style: TextStyle(
-                              fontSize: 27,
-                              fontFamily: "Roboto",
-                              fontWeight: FontWeight.w300,
-                              color: Colors.white,
-                            ),
+                Container(
+                  margin: const EdgeInsets.only(
+                    top: 20,
+                    bottom: 20,
+                  ),
+                  child: RaisedButton(
+                    onPressed: () {
+                      // Check if valid
+                      if (_formKey.currentState.validate()) {
+                        this.kaydet();
+                      }
+                    },
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                    padding: EdgeInsets.all(0.0),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xff69d9cc), Color(0xff50ff8c)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(50.0)
+                      ),
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                        alignment: Alignment.center,
+                        padding: EdgeInsets.all(10),
+                        child: Text(
+                          'Kaydet',
+                          style: TextStyle(
+                            fontSize: 27,
+                            fontFamily: "Roboto",
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
                           ),
                         ),
                       ),
                     ),
                   ),
-
-                  Container(
-                    margin: const EdgeInsets.only(
-                      top: 20,
-                      bottom: 20,
-                    ),
-                    child: RaisedButton(
-                      onPressed: () {
-                        // Check if valid
-                        if (_formKey.currentState.validate()) {
-                          this.kaydet();
-                        }
-                      },
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
-                      padding: EdgeInsets.all(0.0),
-                      child: Ink(
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xff69d9cc), Color(0xff50ff8c)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(50.0)
-                        ),
-                        child: Container(
-                          constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
-                          alignment: Alignment.center,
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            'Kaydet',
-                            style: TextStyle(
-                              fontSize: 27,
-                              fontFamily: "Roboto",
-                              fontWeight: FontWeight.w300,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -45,8 +45,25 @@ class GosterGorevState extends State<GosterGorev> with SingleTickerProviderState
       Navigator.pop(context);
     });
   }
+  void renkDegistir(Color color) {
+    setState(() {
+      widget.item.renk = color;
+    });
+  }
 
-  void hatirlat() {
+  void kaydet() {
+
+    print(baslikText.text);
+    widget.item.baslik = baslikText.text;
+    print(aciklamaText.text);
+    widget.item.aciklama = aciklamaText.text;
+    print("Renk: ");
+    print(widget.item.renk.toString());
+    widget.ekleItem(widget.item);
+    Navigator.pop(context);
+  }
+
+  /*void hatirlat() {
     print(widget.item.sonZaman);
     setState(() {
       if(widget.item.sonZaman == null) {
@@ -94,31 +111,7 @@ class GosterGorevState extends State<GosterGorev> with SingleTickerProviderState
         widget.item.sonZaman = null;
       }
     });
-  }
-
-  void renkDegistir(Color color) {
-    setState(() {
-      widget.item.renk = color;
-    });
-  }
-
-  void kaydet() {
-
-    print(baslikText.text);
-    widget.item.baslik = baslikText.text;
-
-    print(aciklamaText.text);
-    widget.item.aciklama = aciklamaText.text;
-
-    print("Renk: ");
-    print(widget.item.renk.toString());
-
-    // Add the item
-    widget.ekleItem(widget.item);
-
-    // Go back
-    Navigator.pop(context);
-  }
+  }*/
 
   @override
   void dispose() {
@@ -146,13 +139,6 @@ class GosterGorevState extends State<GosterGorev> with SingleTickerProviderState
         ),
         actions: <Widget>[
           IconButton(
-            icon: (widget.item.sonZaman != null ? Icon(Icons.alarm) : Icon(Icons.add_alarm)),
-            color: RenkPaleti.ACIK_KIRMIZI,
-            onPressed: () {
-              this.hatirlat();
-            },
-          ),
-          IconButton(
             icon: (widget.item.favori ? Icon(Icons.bookmark) : Icon(Icons.bookmark_border)),
             color: RenkPaleti.ACIK_KIRMIZI,
             onPressed: () {
@@ -163,7 +149,7 @@ class GosterGorevState extends State<GosterGorev> with SingleTickerProviderState
             icon: Icon(EkleIcon.ucak, color: RenkPaleti.ACIK_KIRMIZI),
             color: RenkPaleti.ACIK_KIRMIZI,
             onPressed: () {
-              this.fav();
+              widget.item.share(context);
             },
           ),
           IconButton(

@@ -8,6 +8,7 @@ import 'package:ontask/models/kullanici.dart';
 import 'package:ontask/models/gorev.dart';
 import 'package:ontask/models/ogrenci.dart';
 import 'package:ontask/widgets/ekleGorev.dart';
+import 'package:ontask/widgets/sifreEkran.dart';
 import 'package:provider/provider.dart';
 import 'package:ontask/gorevler.dart';
 import 'package:ontask/models/liste.dart';
@@ -17,21 +18,22 @@ import 'package:dotted_border/dotted_border.dart';
 
 typedef IcerikSilCallback = void Function(Icerik item);
 typedef ListeGosterCallback = void Function(BuildContext context, Icerik item);
-typedef IcCallback = void Function(Gorevler gorevler);
+typedef IcCallback = void Function(Klasor gorevler);
 
 class GorevWidget extends StatefulWidget {
 
-  final Gorevler gorevler;
+  final Klasor gorevler;
   final IcerikSilCallback silIcerik;
   final IcerikSilCallback favIcerik;
   final IcerikSilCallback ekleItem;
   final ListeGosterCallback gosterEkleListeModel;
   final IcCallback ic;
   final IcerikSilCallback sil;
+  final IcerikSilCallback yoket;
   final IcerikSilCallback kurtar;
 
   GorevWidget({this.gorevler, this.silIcerik, this.favIcerik, this.ekleItem,
-    this.gosterEkleListeModel, this.ic, this.sil, this.kurtar});
+    this.gosterEkleListeModel, this.ic, this.sil, this.yoket, this.kurtar});
 
   @override
   GorevWidgetState createState() => GorevWidgetState();
@@ -41,69 +43,211 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
 
   bool _durum = false;
 
-  toggleDropArea() {
+  TextEditingController searchBarController = new TextEditingController();
+  String filter;
+
+  toggleDurum() {
     setState(() {
       this._durum = !this._durum;
     });
   }
 
   @override
+  void initState() {
+    searchBarController.addListener(() {
+      setState(() {
+        filter = searchBarController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    searchBarController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final _durumKey = GlobalKey<FormState>();
-    Gorevler gorevler = Provider.of<Gorevler>(context, listen: false);
+    final _durumKeySil = GlobalKey<FormState>();
     return Column(
       children: <Widget>[
-
         Visibility(
           visible: _durum,
-          child: DragTarget<Icerik>(
-            key: _durumKey,
-            onWillAccept: (data) => data is Icerik,
-            onAccept: (data) {
-              if(widget.gorevler.mode == Ayarlar.SILINEN){
-                widget.kurtar(data);
-              }
-              else{
-                widget.sil(data);
-              }
-            },
-            onLeave: (data) {
-              print("!!!");
-            },
-            builder: (context, candidateData, rejectedData) {
-              return Padding(
-                padding: const EdgeInsets.only(
-                  top: 40,
-                  bottom: 0,
-                ),
-                child: DottedBorder(
-                  color: RenkPaleti.ACIK_KIRMIZI,
-                  dashPattern: [8, 4],
-                  strokeWidth: 2,
-                  borderType: BorderType.Circle,
-                  child: Container(
-                      height: 50,
-                      width: 50,
-                      alignment: Alignment.center,
-                      color: Colors.transparent,
-                      child: Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(500),
+          child: Container(
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: (widget.gorevler.mode == Ayarlar.SILINEN)
+                  ? MainAxisAlignment.spaceEvenly
+                  : MainAxisAlignment.center,
+              children: [
+                Visibility(
+                  visible: _durum && (widget.gorevler.mode == Ayarlar.SILINEN),
+
+                  child: DragTarget<Icerik>(
+                    key: _durumKeySil,
+                    onWillAccept: (data) => data is Icerik,
+                    onAccept: (data) {
+                      widget.sil(data);
+                    },
+                    onLeave: (data) {
+                      print("!!!");
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          top: 40,
+                          bottom: 0,
                         ),
-                        child: Center(
-                          child: Icon(
-                            widget.gorevler.mode == Ayarlar.SILINEN ? Icons.restore_from_trash : Icons.delete,
-                            color: RenkPaleti.ACIK_KIRMIZI,
-                          ),
+                        child: DottedBorder(
+                          color: RenkPaleti.ACIK_KIRMIZI,
+                          dashPattern: [8, 4],
+                          strokeWidth: 2,
+                          borderType: BorderType.Circle,
+                          child: Container(
+                              height: 50,
+                              width: 50,
+                              alignment: Alignment.center,
+                              color: Colors.transparent,
+                              child: Card(
+                                color: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(500),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.delete,
+                                    color: RenkPaleti.ACIK_KIRMIZI,
+                                  ),
+                                ),
+                              )),
                         ),
-                      )),
+                      );
+                    },
+                  ),
                 ),
-              );
-            },
+                Visibility(
+                  visible: _durum,
+                  child: DragTarget<Icerik>(
+                    key: _durumKey,
+                    onWillAccept: (data) => data is Icerik,
+                    onAccept: (data) {
+                      if (widget.gorevler.mode == Ayarlar.SILINEN) {
+                        widget.kurtar(data);
+                      } else {
+                        widget.sil(data);
+                      }
+                    },
+                    onLeave: (data) {
+                      print("'!!!");
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          top: 40,
+                          bottom: 0,
+                        ),
+                        child: DottedBorder(
+                          color: RenkPaleti.ACIK_KIRMIZI,
+                          dashPattern: [8, 4],
+                          strokeWidth: 2,
+                          borderType: BorderType.Circle,
+                          child: Container(
+                              height: 50,
+                              width: 50,
+                              alignment: Alignment.center,
+                              color: Colors.transparent,
+                              child: Card(
+                                color: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(500),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    widget.gorevler.mode == Ayarlar.SILINEN ? Icons
+                                        .restore_from_trash : Icons.delete,
+                                    color: RenkPaleti.ACIK_KIRMIZI,
+                                  ),
+                                ),
+                              )),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+              ],
+            ),
           ),
         ),
 
+        Container(
+          margin: EdgeInsets.only(
+            left: 0,
+            right: 0,
+            top: 40,
+            bottom: 0,
+          ),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 0,
+            bottom: 0,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10)
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.10),
+                spreadRadius: 5,
+                blurRadius: 7,
+                offset: Offset(0, 3), // changes position of shadow
+              ),
+            ],
+          ),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: TextFormField(
+                  controller: searchBarController,
+                  style: TextStyle(
+                    color: RenkPaleti.ACIK_KIRMIZI,
+                  ),
+                  cursorColor: RenkPaleti.ACIK_KIRMIZI.withOpacity(0.75),
+                  decoration: InputDecoration(
+                    hintText: "Arayınız...",
+                    hintStyle: TextStyle(
+                      fontSize: 23,
+                      color: RenkPaleti.ACIK_KIRMIZI.withOpacity(0.50),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+
+              IconButton(
+                alignment: Alignment.center,
+                onPressed: () {
+
+                },
+                icon: Icon(
+                  Icons.search,
+                  size: 30,
+                  color: RenkPaleti.ACIK_KIRMIZI,
+                ),
+                padding: EdgeInsets.all(15),
+              ),
+
+            ],
+          ),
+        ),
         Expanded(
           child: GridView.count(
             // Row width
@@ -115,41 +259,20 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
               top: 30,
             ),
             // Generate 100 widgets that display their index in the List.
-            children: List.generate(widget.gorevler.contentLength, (index) {
-
-              Icerik item = widget.gorevler.get(index);
+            children: List.generate(
+                widget.gorevler.contentLengthFiltered(filter), (index) {
+              Icerik item = widget.gorevler.getFiltered(filter, index);
 
               return Draggable<Icerik>(
                 data: item,
                 child: GestureDetector(
                   onTap: () {
-
-                    if(item is Gorev) {
-
-                      Navigator.push(context,MaterialPageRoute(builder: (context) => GosterGorev(
-                        ekleItem: widget.ekleItem,
-                        silItem: widget.silIcerik,
-                        item: item,
-                        favItem: widget.favIcerik,
-                      )));
-                    }
-
-                    else if(item is Liste) {
-
-                      widget.gosterEkleListeModel(
-                          context,
-                          item
-                      );
-                    }
-
-                    else if(item is Klasor) {
-
-                      widget.ic(item.icerik);
-                    }
+                    this.clickIcerik(item);
                   },
                   child: GridTile(
                     child: Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius
+                          .circular(10.0)),
                       elevation: 1.5,
                       child: Column(
                         children: <Widget>[
@@ -161,12 +284,13 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                             ),
                             decoration: new BoxDecoration(
                                 color: item.getRenk(),
-                                borderRadius: new BorderRadius.all(Radius.circular(50))
+                                borderRadius: new BorderRadius.all(
+                                    Radius.circular(50))
                             ),
                             padding: const EdgeInsets.all(20),
                             child: Icon(
                               item.getIcon(),
-                              color: Colors.white,
+                              color: item.getIconRenk(),
                               size: 25,
                             ),
                           ),
@@ -181,6 +305,9 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                               alignment: Alignment.bottomLeft,
                               child: Text(
                                 item.getBaslik(),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                softWrap: false,
                                 style: TextStyle(
                                   backgroundColor: Colors.white,
                                   fontSize: 16,
@@ -188,7 +315,7 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                                   color: RenkPaleti.ACIK_KIRMIZI,
                                   shadows: [
                                     Shadow(
-                                      offset: Offset(1,1),
+                                      offset: Offset(1, 1),
                                       blurRadius: 5,
                                       color: Color.fromARGB(50, 0, 0, 0),
                                     ),
@@ -214,7 +341,7 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                                   color: RenkPaleti.ACIK_KIRMIZI,
                                   shadows: [
                                     Shadow(
-                                      offset: Offset(1,1),
+                                      offset: Offset(1, 1),
                                       blurRadius: 5,
                                       color: Color.fromARGB(50, 0, 0, 0),
                                     ),
@@ -232,7 +359,8 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                 ),
                 feedback: GridTile(
                   child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0)),
                     elevation: 1.5,
                     child: Column(
                       children: <Widget>[
@@ -244,94 +372,8 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                           ),
                           decoration: new BoxDecoration(
                               color: item.getRenk(),
-                              borderRadius: new BorderRadius.all(Radius.circular(50))
-                          ),
-                          padding: const EdgeInsets.all(20),
-                          child: Icon(
-                            item.getIcon(),
-                            color: item.getIconRenk(),
-                            size: 25,
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 20,
-                            right: 20,
-                            bottom: 5,
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Text(
-                              item.getBaslik(),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines:2,
-                              style: TextStyle(
-                                backgroundColor: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: RenkPaleti.ACIK_KIRMIZI,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(1,1),
-                                    blurRadius: 5,
-                                    color: Color.fromARGB(50, 0, 0, 0),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 20,
-                            right: 10,
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Text(
-                              item.getAciklama(),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines:2,
-                              style: TextStyle(
-                                backgroundColor: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w300,
-                                color: RenkPaleti.ACIK_KIRMIZI,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(1,1),
-                                    blurRadius: 5,
-                                    color: Color.fromARGB(50, 0, 0, 0),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      ],
-                    ),
-
-                  ),
-                ),
-                childWhenDragging: GridTile(
-                  child: Card(
-                    color:Colors.white70,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                    elevation: 0,
-                    child: Column(
-                      children: <Widget>[
-
-                        Container(
-                          margin: const EdgeInsets.only(
-                            top: 20,
-                            bottom: 10,
-                          ),
-                          decoration: new BoxDecoration(
-                              color: item.getRenk().withOpacity(0.5),
-                              borderRadius: new BorderRadius.all(Radius.circular(50))
+                              borderRadius: new BorderRadius.all(
+                                  Radius.circular(50))
                           ),
                           padding: const EdgeInsets.all(20),
                           child: Icon(
@@ -352,7 +394,96 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                             child: Text(
                               item.getBaslik(),
                               overflow: TextOverflow.ellipsis,
-                              maxLines:2,
+                              maxLines: 2,
+                              style: TextStyle(
+                                backgroundColor: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: RenkPaleti.ACIK_KIRMIZI,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 5,
+                                    color: Color.fromARGB(50, 0, 0, 0),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 20,
+                            right: 10,
+                          ),
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              item.getAciklama(),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: TextStyle(
+                                backgroundColor: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w300,
+                                color: RenkPaleti.ACIK_KIRMIZI,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 5,
+                                    color: Color.fromARGB(50, 0, 0, 0),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      ],
+                    ),
+
+                  ),
+                ),
+                childWhenDragging: GridTile(
+                  child: Card(
+                    color: Colors.white70,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0)),
+                    elevation: 0,
+                    child: Column(
+                      children: <Widget>[
+
+                        Container(
+                          margin: const EdgeInsets.only(
+                            top: 20,
+                            bottom: 10,
+                          ),
+                          decoration: new BoxDecoration(
+                              color: item.getRenk().withOpacity(0.5),
+                              borderRadius: new BorderRadius.all(
+                                  Radius.circular(50))
+                          ),
+                          padding: const EdgeInsets.all(20),
+                          child: Icon(
+                            item.getIcon(),
+                            color: Colors.white,
+                            size: 25,
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 20,
+                            right: 20,
+                            bottom: 5,
+                          ),
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              item.getBaslik(),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
                               style: TextStyle(
                                 backgroundColor: Colors.white70,
                                 fontSize: 16,
@@ -381,7 +512,7 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                                 color: RenkPaleti.ACIK_KIRMIZI,
                                 shadows: [
                                   Shadow(
-                                    offset: Offset(1,1),
+                                    offset: Offset(1, 1),
                                     blurRadius: 5,
                                     color: Color.fromARGB(50, 0, 0, 0),
                                   ),
@@ -397,145 +528,49 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
                   ),
                 ),
                 onDragStarted: () {
-
-                  toggleDropArea();
+                  toggleDurum();
                 },
                 onDragEnd: (details) {
-
-                  toggleDropArea();
+                  toggleDurum();
                 },
                 maxSimultaneousDrags: 1,
-                  affinity: Axis.horizontal,
+                affinity: Axis.horizontal,
               );
             }),
           ),
         ),
-
       ],
     );
-/*
-    return GridView.count(
-      // Row width
-      crossAxisCount: 2,
-      childAspectRatio: 1,
-      mainAxisSpacing: 4,
-      crossAxisSpacing: 4,
-      // Generate 100 widgets that display their index in the List.
-      children: List.generate(gorevler.length, (index) {
-        Icerik item = gorevler.get(index);
-        return GestureDetector(
-          onTap: () {
-            if (item is Gorev) {
-
-              ///Goreve git
-              Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                  GosterGorev(
-                    ekleItem: ekleItem,
-                    silItem: silIcerik,
-                    item: item,
-                    favItem: favIcerik,
-                  )));
-            }
-
-            /// Listeye git
-            else if (item is Liste) {
-              gosterEkleListeModel(
-                  context,
-                  item
-              );
-            }
-
-            /// Klasöre git
-            else if (item is Klasor) {
-                ic(item.icerik);
-            }
-          },
-          child: GridTile(
-            child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0)),
-              elevation: 1.5,
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    margin: const EdgeInsets.only(
-                      top: 20,
-                      bottom: 10,
-                    ),
-                    decoration: new BoxDecoration(
-                        color: item.getRenk(),
-                        borderRadius: new BorderRadius.all(Radius.circular(50))
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Icon(
-                      item.getIcon(),
-                      color: Colors.white,
-                      size: 25,
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      bottom: 5,
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        item.getBaslik(),
-                        style: TextStyle(
-                          backgroundColor: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: RenkPaleti.ACIK_KIRMIZI,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1, 1),
-                              blurRadius: 5,
-                              color: Color.fromARGB(50, 0, 0, 0),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 20,
-                      right: 10,
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        item.getAciklama(),
-                        style: TextStyle(
-                          backgroundColor: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w300,
-                          color: RenkPaleti.ACIK_KIRMIZI,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1, 1),
-                              blurRadius: 5,
-                              color: Color.fromARGB(50, 0, 0, 0),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-*/
   }
 
+  void clickIcerik(Icerik item) async {
+    if (item is Gorev) {
+      final response = await Navigator.push(
+          context, MaterialPageRoute(builder: (context) =>
+          SifreEkran(
+            sifre: item.sifre,
+          )));
+      if (response == SifreEkran.SONUCOK) {
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>
+            GosterGorev(
+              ekleItem: widget.ekleItem,
+              silItem: widget.silIcerik,
+              item: item,
+              favItem: widget.favIcerik,
+            )));
+      }
+    }
+    else if (item is Liste) {
+      widget.gosterEkleListeModel(
+          context,
+          item
+      );
+    }
+    else if (item is Klasor) {
+      widget.ic(item);
+    }
+  }
+}
   Widget slideRightBackground() {
     return Container(
       color: Colors.green,
@@ -577,7 +612,7 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
               color: Colors.white,
             ),
             Text(
-              " Arşivle",
+              "Sil",
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -593,4 +628,3 @@ class GorevWidgetState extends State<GorevWidget> with SingleTickerProviderState
       ),
     );
   }
-}

@@ -7,9 +7,8 @@ import 'package:ontask/models/icerik.dart';
 import 'package:ontask/models/klasor.dart';
 import 'package:ontask/models/gorev.dart';
 import 'package:ontask/gorevler.dart';
+import 'package:ontask/widgets/ekleListe.dart';
 import 'package:ontask/widgets/icerikGoster.dart';
-
-//import 'package:ontask/widgets/icerikGoster.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:ontask/widgets/ekleGorev.dart';
@@ -19,8 +18,10 @@ import 'package:ontask/ayarlar/sabitler.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:ontask/models/checkbox.dart';
-
 import 'dart:ui' as ui;
+import 'package:ontask/widgets/ekleGorev.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -53,14 +54,68 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-  int _counter = 0;
 
-  String _mod = "normal";
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  Gorevler gorevler = Gorevler();
+  int counter = 0;
+
+  Future<int> _counter;
+
+  String _mode = "normal";
+
+  Klasor gorevler = Klasor.empty();
 
   MyHomePageState(){
     gorevler.goster();
+  }
+
+  Future<void> _incCounter() async {
+
+    final SharedPreferences prefs = await _prefs;
+
+    counter = (prefs.getInt('counter') ?? 0) + 1;
+
+    setState(() {
+      _counter = prefs.setInt("counter", counter).then((bool success) {
+        return counter;
+      });
+    });
+  }
+
+  void _favIcerik(Icerik item) {
+    setState(() {
+      item.favori = !item.favori;
+    });
+  }
+
+  void _ic(Klasor n){
+    setState(() {
+      gorevler = n;
+    });
+  }
+
+  void _sil(Icerik item){
+    setState(() {
+      gorevler.remove(item);
+    });
+  }
+
+  void _kurtar(Icerik item){
+    setState(() {
+      gorevler.restore(item);
+    });
+  }
+
+  void _icerikSil(Icerik item) {
+    setState(() {
+      gorevler.remove(item);
+    });
+  }
+
+  void _icerikYoket(Icerik item) {
+    setState(() {
+      gorevler.erase(item);
+    });
   }
 
   void _ekleItem(Icerik item) {
@@ -82,37 +137,7 @@ class _MyHomePageState extends State<MyHomePage>
       }
     });
   }
-
-  void _favIcerik(Icerik item) {
-    setState(() {
-      item.favori = !item.favori;
-    });
-  }
-
-  void _ic(Gorevler n){
-    setState(() {
-      gorevler = n;
-    });
-  }
-
-  void _sil(Icerik item){
-    setState(() {
-      gorevler.remove(item);
-    });
-  }
-
-  void _kurtar(Icerik item){
-    setState(() {
-      gorevler.kurtar(item);
-    });
-  }
-
-  void _icerikSil(Icerik item) {
-    setState(() {
-      gorevler.remove(item);
-    });
-  }
-
+/*
   void _icerikEkle(String isim) {
     setState(() {
       _counter++;
@@ -160,6 +185,7 @@ class _MyHomePageState extends State<MyHomePage>
       gorevler.add(item);
     });
   }
+*/
 
   void _degistirMod(String mod){
     setState(() {
@@ -173,10 +199,6 @@ class _MyHomePageState extends State<MyHomePage>
 
       _ic(gorevler.parent);
     }
-    else {
-      print(gorevler.length);
-      print(gorevler.parent);
-    }
   }
 
   @override
@@ -188,80 +210,76 @@ class _MyHomePageState extends State<MyHomePage>
         child: Scaffold(
 //          drawer: DrawMenu(),
           backgroundColor: Color(0xFFFEEBDF),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Color(0xFFFFECE0),Color(0xFFF6E4D8)],
+          body: GestureDetector(
+            onTap: (){
+              FocusScope.of(context).requestFocus(new FocusNode());
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [Color(0xFFFFECE0),Color(0xFFF6E4D8)],
+                ),
+              ),
+              padding: const EdgeInsets.only(
+                top: 20,
+                bottom: 0,
+                left: 20,
+                right: 20,
+              ),
+              child: gorevler.icerikLength <= 0 ? gosterr() : GorevWidget(
+                gorevler: gorevler,
+                ekleItem: (Icerik item) {
+                  setState(() {
+                    _ekleItem(item);
+                  });
+                },
+                silIcerik: (Icerik item) {
+                  setState(() {
+                    _icerikSil(item);
+                  });
+                },
+                favIcerik: (Icerik item) {
+                  setState(() {
+                    _favIcerik(item);
+                  });
+                },
+                gosterEkleListeModel: (context,Icerik item) {
+                  setState(() {
+                    Navigator.push(context,MaterialPageRoute(builder: (context) => EkleListe(
+                      ekleItem: _ekleItem,
+                      silItem: (Icerik item) {
+                        setState(() {
+                          _icerikSil(item);
+                        });
+                      },
+                      item: item,
+                    )));
+                  });
+                },
+                ic: (Klasor gorevler) {
+                  setState(() {
+                    _ic(gorevler);
+                  });
+                },
+                sil: (Icerik item){
+                  setState(() {
+                    _sil(item);
+                  });
+                },
+                kurtar: (Icerik item){
+                  setState(() {
+                    _kurtar(item);
+                  });
+                },
+                yoket: (Icerik item){
+                  setState(() {
+                    _icerikYoket(item);
+                  });
+                },
               ),
             ),
-            padding: const EdgeInsets.only(
-              top: 20,
-              bottom: 0,
-              left: 20,
-              right: 20,
-            ),
-            child: GorevWidget(
-              gorevler: gorevler,
-              ekleItem: (Icerik item) {
-                setState(() {
-                  _ekleItem(item);
-                });
-              },
-              silIcerik: (Icerik item) {
-                setState(() {
-                  _icerikSil(item);
-                });
-              },
-              favIcerik: (Icerik item) {
-                setState(() {
-                  _favIcerik(item);
-                });
-              },
-              gosterEkleListeModel: (context,Icerik item) {
-                setState(() {
-                  gosterEkleListeModel(context,item);
-                });
-              },
-              ic: (Gorevler gorevler) {
-                setState(() {
-                  _ic(gorevler);
-                });
-              },
-              sil: (Icerik item){
-                setState(() {
-                  _sil(item);
-                });
-              },
-              kurtar: (Icerik item){
-                setState(() {
-                  _kurtar(item);
-                });
-              }
-            ),
-            /*child: GorevWidget(
-              ekleItem: (Icerik item) {
-                setState(() {
-                  _ekleItem(item);
-                });
-              },
-              silIcerik: (Icerik item) {
-                setState(() {
-                  _icerikSil(item);
-                });
-              },
-              favIcerik: (Icerik item) {
-                setState(() {
-                  _favIcerik(item);
-                });
-              },
-              gosterEkleListeModel: (context, Icerik item) {
-                setState(() {
-                  gosterEkleListeModel(context, item);
-                });
-              },
-            ),*/
           ),
           bottomNavigationBar: BottomAppBar(
             shape: CircularNotchedRectangle(),
@@ -320,40 +338,79 @@ class _MyHomePageState extends State<MyHomePage>
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           floatingActionButton: Container(
-            width: 70.0,
-            height: 70.0,
-            margin: const EdgeInsets.all(15),
-            child: ClipOval(
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: [Color(0xFFF8D682), Color(0xFFE58981)]),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    gosterEkleModel(context);
-                  },
-                  icon: Icon(Icons.add),
-                  color: Colors.white,
-                ),
-              ),
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [Color(0xFFF8D6B2), Color(0xFFE58981)])
+            ),
+            child: IconButton(
+              onPressed: () {
+                gosterEkleModel(context);
+              },
+              icon: Icon(Icons.add),
+              color: Colors.white,
             ),
           ),
-          /*floatingActionButton: FloatingMenu(ekleIcerik: (String isim) {
-            setState(() {
-              _icerikEkle(isim);
-            });
-          }, ekleItem: (Icerik item) {
-            setState(() {
-              _ekleItem(item);
-            });
-          }),*/
         ),
       ),
+    );
+  }
+
+  Column gosterr() {
+
+    AssetImage bosImage;
+    String bosImageAciklama;
+
+    if (gorevler.mode == Ayarlar.SILINEN) {
+
+      bosImage = AssetImage('assets/bos.png');
+      bosImageAciklama = "Arşiv bulunamadı !";
+
+    } else if (gorevler.mode == Ayarlar.FAVORI) {
+
+      bosImage = AssetImage('assets/bos2.png');
+      bosImageAciklama = "Favori bulunamadı !";
+
+    } else {
+      bosImage = AssetImage('assets/bos1.png');
+      bosImageAciklama = "İçerik bulunamadı !";
+    }
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Image(
+              image: bosImage,
+              repeat: ImageRepeat.noRepeat,
+              fit: BoxFit.fitWidth,
+              width: MediaQuery.of(context).size.width * 0.65,
+            ),
+          ],
+        ),
+
+        SizedBox(height: 25),
+
+        Flexible(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                bosImageAciklama,
+                style: TextStyle(
+                  color: Color(0xFF3F3D56),
+                  fontSize: 20,
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -494,7 +551,7 @@ class _MyHomePageState extends State<MyHomePage>
                       size: 30,
                     ),
                     title: Text(
-                      'Yeni Görev Alanı...',
+                      'Yeni Görev...',
                       textAlign: TextAlign.left,
                       style: TextStyle(
                         color: Color(0xFFE15A61),
@@ -507,7 +564,7 @@ class _MyHomePageState extends State<MyHomePage>
                       bottom: 7,
                     ),
                     subtitle: new Text(
-                      'Kolayca Görev Ekleyin...',
+                      'Görev Ekleyin...',
                       textAlign: TextAlign.left,
                       style: TextStyle(
                         color: Color(0xFFFF8C8E),
@@ -522,7 +579,7 @@ class _MyHomePageState extends State<MyHomePage>
                               builder: (context) => EkleGorev(
                                     ekleItem: _ekleItem,
                                     item: Gorev("", false, false, null, "",
-                                        Colors.greenAccent, null),
+                                         null),
                                   ))),
                     },
                   ),
@@ -586,18 +643,24 @@ class _MyHomePageState extends State<MyHomePage>
                       ),
                     ),
                     onTap: () => {
-                      Navigator.pop(context),
-                      gosterEkleListeModel(
-                          context,
-                          Liste(
-                              "",
-                              false,
-                              false,
-                              null,
-                              "",
-                              Colors.primaries[new Random()
-                                  .nextInt(Colors.primaries.length - 1)]))
-                    },
+
+                      Navigator.push(context,MaterialPageRoute(builder: (context) => EkleListe(
+                        ekleItem: _ekleItem,
+                        item: Liste(
+                            "",
+                            false,
+                            false,
+                            null,
+                            "",
+                            RenkPaleti.randomColor()
+                        ),
+                        silItem: (Icerik item) {
+                          setState(() {
+                            _icerikSil(item);
+                          });
+                        },
+                      ))),
+       },
                   ),
                 ),
               ],
@@ -612,7 +675,7 @@ class _MyHomePageState extends State<MyHomePage>
     final baslikText = TextEditingController();
 
     Klasor klasor = Klasor(null, false, false, null, "Açıklama mevcut değil...",
-        Colors.primaries[Random().nextInt(Colors.primaries.length - 1)]);
+        RenkPaleti.randomColor());
 
     showModalBottomSheet(
         isScrollControlled: true,
@@ -726,16 +789,10 @@ class _MyHomePageState extends State<MyHomePage>
                       hintText: "Klasör Adı...",
                       hintStyle: TextStyle(
                         fontSize: 23,
-                        color: Colors.pinkAccent[100],
+                        color: RenkPaleti.ACIK_KIRMIZI.withOpacity(0.5),
                       ),
                       border: InputBorder.none,
                     ),
-                    validator: (value) {
-                      if (value.isEmpty) {
-                        return 'Klasör Adı...';
-                      }
-                      return null;
-                    },
                   ),
                 ),
                 Row(
@@ -789,11 +846,12 @@ class _MyHomePageState extends State<MyHomePage>
                         onPressed: () {
                           // Check if valid
                           if (_formKey.currentState.validate()) {
-                            print(baslikText.text);
 
-                            klasor.baslik = baslikText.text;
+                            klasor.baslik = baslikText.text.isEmpty ? "Yeni Klasör $counter" : baslikText.text;
 
                             _ekleItem(klasor);
+
+                            _incCounter();
 
                             Navigator.pop(context);
                           }
@@ -815,7 +873,7 @@ class _MyHomePageState extends State<MyHomePage>
                             alignment: Alignment.center,
                             padding: EdgeInsets.all(10),
                             child: Text(
-                              'Oluştur',
+                              'Kaydet',
                               style: TextStyle(
                                 fontSize: 27,
                                 fontFamily: "Roboto",
@@ -836,7 +894,6 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void gosterEkleListeModel(context, Liste todoList) {
-    // Check empty
     if (todoList == null) return;
 
     final _formKeyTodoList = GlobalKey<FormState>();

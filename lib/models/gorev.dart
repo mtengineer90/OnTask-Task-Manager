@@ -4,32 +4,26 @@ import 'package:ontask/models/icerik.dart';
 import 'package:ontask/ayarlar/sabitler.dart';
 
 class Gorev extends Icerik{
-  DateTime editZamani;
-  DateTime sonZaman;
-  DateTime olusturmaZamani;
 
-  Gorev(baslik, favori, secured, sifre, aciklama, renk, this.sonZaman): super(baslik, favori, secured, sifre, aciklama, Icons.note, renk){
-    this.olusturmaZamani=DateTime.now();
-    this.editZamani=DateTime.now();
-  }
+  Gorev(baslik, favori, secured, sifre, aciklama, renk): super(baslik, favori, secured, sifre, aciklama, renk);
 
   @override
   String getAciklama() {
 
-    if(secured==true){
+    if(sifre!=null){
       return "Kilitli Görev";
     }
 
     if(this.sonZaman != null) {
-      return "${sonZaman.difference(DateTime.now()).inHours} hours left";
+      return "${sonZaman.difference(DateTime.now()).inHours} saat kaldı...";
     } else {
-      return "Editlendi: ${DateFormat.yMMMd().format(this.editZamani)}";
+      return "Editlendi: ${DateFormat.yMMMd().format(this.sonDegisimZamani)}";
     }
   }
 
   @override
   IconData getIcon() {
-    if(secured==true){
+    if(sifre!=null){
       return EkleIcon.kilit;
     }
     return EkleIcon.dokuman;

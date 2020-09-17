@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:ontask/models/checkbox.dart';
 import 'package:ontask/models/icerik.dart';
 import 'package:ontask/ayarlar/sabitler.dart';
+import 'package:share/share.dart';
 
 class Liste extends Icerik{
 
   List<CheckBox> listCheckbox;
 
   Liste(baslik, favori, secured, sifre, aciklama, renk):
-      super(baslik, favori, secured, sifre, aciklama, Icons.format_list_bulleted, renk){
+      super(baslik, favori, secured, sifre, aciklama, renk){
     this.listCheckbox = List<CheckBox>();
   }
   @override
   String getAciklama() {
-    if(secured==true){
+    if(sifre!=null){
       return "Kilitli Liste";
     }
 
@@ -25,10 +26,30 @@ class Liste extends Icerik{
   @override
   IconData getIcon() {
 
-    if(secured==true){
+    if(sifre!=null){
       return EkleIcon.kilit;
     }
 
     return EkleIcon.liste;
   }
+
+  @override
+  void share(BuildContext context) {
+
+    final RenderBox box = context.findRenderObject();
+
+    String mailContent = "${this.baslik} \n\n";
+
+    this.listCheckbox.forEach((cb) {
+      mailContent += cb.isChecked ? "✔️" : "❌";
+      mailContent += "\t ${cb.baslik} \n\n";
+    });
+
+    Share.share(
+      mailContent,
+      subject: this.baslik,
+      sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
+    );
+  }
+
 }

@@ -16,9 +16,6 @@ class DrawMenu extends StatelessWidget{
             ),
             decoration: BoxDecoration(
                 color: Colors.green,
-/*                image: DecorationImage(
-                    fit: BoxFit.fill,
-                    image: AssetImage('assets/images/cover.jpg')),*/
             ),
           ),
 
@@ -30,7 +27,7 @@ class DrawMenu extends StatelessWidget{
 
           ListTile(
             leading: Icon(Icons.border_color),
-            title: Text('Geri Bildirim'),
+            title: Text('Geri'),
             onTap: () => {Navigator.of(context).pop()},
           ),
 

@@ -7,9 +7,9 @@ import 'package:ontask/models/icerik.dart';
 import 'package:ontask/models/klasor.dart';
 import 'package:ontask/models/gorev.dart';
 import 'package:ontask/gorevler.dart';
-import 'package:ontask/widgets/gorevWidget.dart';
+import 'package:ontask/widgets/icerikGoster.dart';
 
-//import 'package:ontask/widgets/gorevWidget.dart';
+//import 'package:ontask/widgets/icerikGoster.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:ontask/widgets/ekleGorev.dart';
@@ -55,7 +55,13 @@ class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   int _counter = 0;
 
+  String _mod = "normal";
+
   Gorevler gorevler = Gorevler();
+
+  MyHomePageState(){
+    gorevler.goster();
+  }
 
   void _ekleItem(Icerik item) {
     setState(() {
@@ -80,6 +86,24 @@ class _MyHomePageState extends State<MyHomePage>
   void _favIcerik(Icerik item) {
     setState(() {
       item.favori = !item.favori;
+    });
+  }
+
+  void _ic(Gorevler n){
+    setState(() {
+      gorevler = n;
+    });
+  }
+
+  void _sil(Icerik item){
+    setState(() {
+      gorevler.remove(item);
+    });
+  }
+
+  void _kurtar(Icerik item){
+    setState(() {
+      gorevler.kurtar(item);
     });
   }
 
@@ -137,109 +161,198 @@ class _MyHomePageState extends State<MyHomePage>
     });
   }
 
+  void _degistirMod(String mod){
+    setState(() {
+      gorevler.mode = mod;
+    });
+  }
+
+  Future<bool> _onBackPressed() {
+
+    if(gorevler.parent != null) {
+
+      _ic(gorevler.parent);
+    }
+    else {
+      print(gorevler.length);
+      print(gorevler.parent);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => gorevler,
-      child: Scaffold(
+      child: WillPopScope(
+        onWillPop: _onBackPressed,
+        child: Scaffold(
 //          drawer: DrawMenu(),
-        backgroundColor: Color(0xFFFEEBDF),
-        body: Container(
-          padding: const EdgeInsets.only(
-            top: 20,
-            bottom: 20,
-            left: 20,
-            right: 20,
+          backgroundColor: Color(0xFFFEEBDF),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Color(0xFFFFECE0),Color(0xFFF6E4D8)],
+              ),
+            ),
+            padding: const EdgeInsets.only(
+              top: 20,
+              bottom: 0,
+              left: 20,
+              right: 20,
+            ),
+            child: GorevWidget(
+              gorevler: gorevler,
+              ekleItem: (Icerik item) {
+                setState(() {
+                  _ekleItem(item);
+                });
+              },
+              silIcerik: (Icerik item) {
+                setState(() {
+                  _icerikSil(item);
+                });
+              },
+              favIcerik: (Icerik item) {
+                setState(() {
+                  _favIcerik(item);
+                });
+              },
+              gosterEkleListeModel: (context,Icerik item) {
+                setState(() {
+                  gosterEkleListeModel(context,item);
+                });
+              },
+              ic: (Gorevler gorevler) {
+                setState(() {
+                  _ic(gorevler);
+                });
+              },
+              sil: (Icerik item){
+                setState(() {
+                  _sil(item);
+                });
+              },
+              kurtar: (Icerik item){
+                setState(() {
+                  _kurtar(item);
+                });
+              }
+            ),
+            /*child: GorevWidget(
+              ekleItem: (Icerik item) {
+                setState(() {
+                  _ekleItem(item);
+                });
+              },
+              silIcerik: (Icerik item) {
+                setState(() {
+                  _icerikSil(item);
+                });
+              },
+              favIcerik: (Icerik item) {
+                setState(() {
+                  _favIcerik(item);
+                });
+              },
+              gosterEkleListeModel: (context, Icerik item) {
+                setState(() {
+                  gosterEkleListeModel(context, item);
+                });
+              },
+            ),*/
           ),
-          child: GorevWidget(
-            ekleItem: (Icerik item) {
-              setState(() {
-                _ekleItem(item);
-              });
-            },
-            silIcerik: (Icerik item) {
-              setState(() {
-                _icerikSil(item);
-              });
-            },
-            favIcerik: (Icerik item) {
-              setState(() {
-                _favIcerik(item);
-              });
-            },
-            gosterEkleListeModel: (context,Icerik item) {
-              setState(() {
-                gosterEkleListeModel(context,item);
-              });
-            },
+          bottomNavigationBar: BottomAppBar(
+            shape: CircularNotchedRectangle(),
+            color: Colors.white,
+            notchMargin: -5.0,
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                IconButton(
+                  onPressed: () {
+                    print("Favoriler");
+                    if(gorevler.mode == Ayarlar.FAVORI){
+                      this._degistirMod(Ayarlar.NORMAL);
+                    }else{
+                      this._degistirMod(Ayarlar.FAVORI);
+                    }
+                  },
+
+                  icon: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (Rect bounds) {
+                      return ui.Gradient.linear(
+                        Offset(4.0, 24.0),
+                        Offset(24.0, 4.0),
+                        [Color(0xFFE58981), Color(0xFFF8D6B2)],
+                      );
+                    },
+          child: gorevler.mode == Ayarlar.FAVORI ? Icon(Icons.format_list_bulleted) : Icon(Icons.collections_bookmark),
+
+        ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    print("Silinenler");
+                    if(gorevler.mode == Ayarlar.SILINEN) {
+                      this._degistirMod(Ayarlar.NORMAL);
+                    } else {
+                      this._degistirMod(Ayarlar.SILINEN);
+                    }
+                  },
+                  icon: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (Rect bounds) {
+                      return ui.Gradient.linear(
+                        Offset(4.0, 24.0),
+                        Offset(24.0, 4.0),
+                        [Color(0xFFE58981), Color(0xFFF8D6B2)],
+                      );
+                    },
+                    child: gorevler.mode == Ayarlar.SILINEN ? Icon(Icons.format_list_bulleted) : Icon(Icons.restore_from_trash),
+                  ),
+                ),
+              ],
+            ),
           ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: Container(
+            width: 70.0,
+            height: 70.0,
+            margin: const EdgeInsets.all(15),
+            child: ClipOval(
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [Color(0xFFF8D682), Color(0xFFE58981)]),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    gosterEkleModel(context);
+                  },
+                  icon: Icon(Icons.add),
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          /*floatingActionButton: FloatingMenu(ekleIcerik: (String isim) {
+            setState(() {
+              _icerikEkle(isim);
+            });
+          }, ekleItem: (Icerik item) {
+            setState(() {
+              _ekleItem(item);
+            });
+          }),*/
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: ShaderMask(
-                blendMode: BlendMode.srcIn,
-                shaderCallback: (Rect bounds) {
-                  return ui.Gradient.linear(
-                    Offset(4.0, 24.0),
-                    Offset(24.0, 4.0),
-                    [
-                      RenkPaleti.colorStart,
-                      RenkPaleti.colorEnd,
-                    ],
-                  );
-                },
-                child: Icon(Icons.favorite_border),
-              ),
-              title: Container(),
-            ),
-            BottomNavigationBarItem(
-              icon: ShaderMask(
-                blendMode: BlendMode.srcIn,
-                shaderCallback: (Rect bounds) {
-                  return ui.Gradient.linear(
-                    Offset(4.0, 24.0),
-                    Offset(24.0, 4.0),
-                    [
-                      RenkPaleti.colorStart,
-                      RenkPaleti.colorEnd,
-                    ],
-                  );
-                },
-                child: Icon(Icons.add_circle_outline),
-              ),
-              title: Container(),
-            ),
-            BottomNavigationBarItem(
-              icon: ShaderMask(
-                blendMode: BlendMode.srcIn,
-                shaderCallback: (Rect bounds) {
-                  return ui.Gradient.linear(
-                    Offset(4.0, 24.0),
-                    Offset(24.0, 4.0),
-                    [
-                      RenkPaleti.colorStart,
-                      RenkPaleti.colorEnd,
-                    ],
-                  );
-                },
-                child: Icon(Icons.restore_from_trash),
-              ),
-              title: Container(),
-            ),
-          ],
-          currentIndex: _seciliIndex,
-          onTap: _seciliItem,
-        ),
-        floatingActionButton: FloatingMenu(ekleIcerik: (String isim) {
-          setState(() {
-            _icerikEkle(isim);
-          });
-        }, ekleItem: (Icerik item) {
-          setState(() {
-            _ekleItem(item);
-          });
-        }),
       ),
     );
   }
@@ -475,36 +588,31 @@ class _MyHomePageState extends State<MyHomePage>
                     onTap: () => {
                       Navigator.pop(context),
                       gosterEkleListeModel(
-                        context,
-                        Liste(
-                          "",false,false,null,
-                          "",Colors.primaries[new Random().nextInt(Colors.primaries.length-1)]
-                        )
-                      )
+                          context,
+                          Liste(
+                              "",
+                              false,
+                              false,
+                              null,
+                              "",
+                              Colors.primaries[new Random()
+                                  .nextInt(Colors.primaries.length - 1)]))
                     },
                   ),
                 ),
               ],
             ),
           );
-        }
-        );
+        });
   }
 
   void gosterEkleKlasorModel(context) {
-
     final _formKey = GlobalKey<FormState>();
 
     final baslikText = TextEditingController();
 
-    Klasor klasor = Klasor(
-        null,
-        false,
-        false,
-        null,
-        "Açıklama mevcut değil...",
-        Colors.primaries[Random().nextInt(Colors.primaries.length-1)]
-    );
+    Klasor klasor = Klasor(null, false, false, null, "Açıklama mevcut değil...",
+        Colors.primaries[Random().nextInt(Colors.primaries.length - 1)]);
 
     showModalBottomSheet(
         isScrollControlled: true,
@@ -513,13 +621,12 @@ class _MyHomePageState extends State<MyHomePage>
         ),
         backgroundColor: Colors.white,
         context: context,
-        builder: (BuildContext bc){
+        builder: (BuildContext bc) {
           return Form(
             key: _formKey,
             child: new Wrap(
               spacing: 20,
               children: <Widget>[
-
                 Center(
                   child: Container(
                     height: 8,
@@ -529,7 +636,7 @@ class _MyHomePageState extends State<MyHomePage>
                       bottom: 5,
                     ),
                     decoration: BoxDecoration(
-                      color:RenkPaleti.ACIK_KIRMIZI,
+                      color: RenkPaleti.ACIK_KIRMIZI,
                       borderRadius: BorderRadius.all(
                         Radius.circular(20),
                       ),
@@ -544,7 +651,6 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                   ),
                 ),
-
                 Container(
                   height: 55,
                   child: SingleChildScrollView(
@@ -558,13 +664,20 @@ class _MyHomePageState extends State<MyHomePage>
                     scrollDirection: Axis.horizontal,
                     child: BlockPicker(
                       layoutBuilder: (context, colors, child) {
-                        Orientation orientation = MediaQuery.of(context).orientation;
+                        Orientation orientation =
+                            MediaQuery.of(context).orientation;
                         return Container(
-                          width: orientation == Orientation.portrait ? 340.0 : 300.0,
-                          height: orientation == Orientation.portrait ? 360.0 : 200.0,
+                          width: orientation == Orientation.portrait
+                              ? 340.0
+                              : 300.0,
+                          height: orientation == Orientation.portrait
+                              ? 360.0
+                              : 200.0,
                           child: ListView(
                             scrollDirection: Axis.horizontal,
-                            children: colors.map((Color color) => child(color)).toList(),
+                            children: colors
+                                .map((Color color) => child(color))
+                                .toList(),
                           ),
                         );
                       },
@@ -578,7 +691,6 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                   ),
                 ),
-
                 Container(
                   margin: EdgeInsets.only(
                     left: 20,
@@ -598,8 +710,7 @@ class _MyHomePageState extends State<MyHomePage>
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10),
                         bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10)
-                    ),
+                        bottomRight: Radius.circular(10)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey.withOpacity(0.15),
@@ -627,12 +738,10 @@ class _MyHomePageState extends State<MyHomePage>
                     },
                   ),
                 ),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-
                     Container(
                       margin: const EdgeInsets.only(
                         top: 20,
@@ -642,7 +751,8 @@ class _MyHomePageState extends State<MyHomePage>
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(80.0)),
                         padding: EdgeInsets.all(0),
                         child: Ink(
                           decoration: BoxDecoration(
@@ -651,10 +761,10 @@ class _MyHomePageState extends State<MyHomePage>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(50.0)
-                          ),
+                              borderRadius: BorderRadius.circular(50.0)),
                           child: Container(
-                            constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                            constraints: BoxConstraints(
+                                maxWidth: 150.0, minHeight: 50.0),
                             alignment: Alignment.center,
                             padding: EdgeInsets.all(10),
                             child: Text(
@@ -670,7 +780,6 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                       ),
                     ),
-
                     Container(
                       margin: const EdgeInsets.only(
                         top: 20,
@@ -680,7 +789,6 @@ class _MyHomePageState extends State<MyHomePage>
                         onPressed: () {
                           // Check if valid
                           if (_formKey.currentState.validate()) {
-
                             print(baslikText.text);
 
                             klasor.baslik = baslikText.text;
@@ -690,7 +798,8 @@ class _MyHomePageState extends State<MyHomePage>
                             Navigator.pop(context);
                           }
                         },
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(80.0)),
                         padding: EdgeInsets.all(0.0),
                         child: Ink(
                           decoration: BoxDecoration(
@@ -699,10 +808,10 @@ class _MyHomePageState extends State<MyHomePage>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(50.0)
-                          ),
+                              borderRadius: BorderRadius.circular(50.0)),
                           child: Container(
-                            constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                            constraints: BoxConstraints(
+                                maxWidth: 150.0, minHeight: 50.0),
                             alignment: Alignment.center,
                             padding: EdgeInsets.all(10),
                             child: Text(
@@ -718,21 +827,17 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                       ),
                     ),
-
                   ],
                 ),
-
               ],
             ),
           );
-        }
-    );
+        });
   }
 
   void gosterEkleListeModel(context, Liste todoList) {
-
     // Check empty
-    if(todoList == null) return;
+    if (todoList == null) return;
 
     final _formKeyTodoList = GlobalKey<FormState>();
     final _formKeyTodoListInsertion = GlobalKey<FormState>();
@@ -749,14 +854,13 @@ class _MyHomePageState extends State<MyHomePage>
         ),
         backgroundColor: Colors.white,
         context: context,
-        builder: (BuildContext bc){
+        builder: (BuildContext bc) {
           return Form(
             key: _formKeyTodoList,
             child: new Column(
               mainAxisSize: MainAxisSize.min,
               verticalDirection: VerticalDirection.down,
               children: <Widget>[
-
                 Center(
                   child: Container(
                     height: 8,
@@ -781,7 +885,6 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                   ),
                 ),
-
                 Container(
                   margin: EdgeInsets.only(
                     left: 20,
@@ -801,8 +904,7 @@ class _MyHomePageState extends State<MyHomePage>
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10),
                         bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10)
-                    ),
+                        bottomRight: Radius.circular(10)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey.withOpacity(0.15),
@@ -834,7 +936,8 @@ class _MyHomePageState extends State<MyHomePage>
                   child: StatefulBuilder(
                     builder: (context, setState) {
                       return ListView.builder(
-                          itemCount: todoList.listCheckbox.length, // How many elements
+                          itemCount: todoList.listCheckbox.length,
+                          // How many elements
                           itemBuilder: (BuildContext ctxt, int index) {
                             return Theme(
                               data: ThemeData(
@@ -844,29 +947,33 @@ class _MyHomePageState extends State<MyHomePage>
                               ),
                               child: CheckboxListTile(
                                 title: Text(
-                                  todoList.listCheckbox[index].baslik.substring(0,1).toUpperCase() + todoList.listCheckbox[index].baslik.substring(1),
+                                  todoList.listCheckbox[index].baslik
+                                          .substring(0, 1)
+                                          .toUpperCase() +
+                                      todoList.listCheckbox[index].baslik
+                                          .substring(1),
                                   style: TextStyle(
                                     color: Color(0xFFFF8C8E),
                                     fontSize: 20,
                                   ),
                                 ),
                                 value: todoList.listCheckbox[index].isChecked,
-                                controlAffinity: ListTileControlAffinity.leading,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
                                 checkColor: Colors.white,
                                 activeColor: RenkPaleti.ACIK_KIRMIZI,
                                 onChanged: (bool value) {
                                   setState(() {
-                                    todoList.listCheckbox[index].isChecked = value;
+                                    todoList.listCheckbox[index].isChecked =
+                                        value;
                                   });
                                 },
                               ),
                             );
-                          }
-                      );
+                          });
                     },
                   ),
                 ),
-
                 Form(
                   key: _formKeyTodoListInsertion,
                   child: Container(
@@ -888,8 +995,7 @@ class _MyHomePageState extends State<MyHomePage>
                           topLeft: Radius.circular(10),
                           topRight: Radius.circular(10),
                           bottomLeft: Radius.circular(10),
-                          bottomRight: Radius.circular(10)
-                      ),
+                          bottomRight: Radius.circular(10)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.15),
@@ -901,7 +1007,6 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                     child: Row(
                       children: <Widget>[
-
                         Flexible(
                           child: TextFormField(
                             controller: elemanTextTodoList,
@@ -921,18 +1026,17 @@ class _MyHomePageState extends State<MyHomePage>
                             },
                           ),
                         ),
-
                         IconButton(
                           alignment: Alignment.center,
                           onPressed: () {
-                            if (_formKeyTodoListInsertion.currentState.validate()) {
+                            if (_formKeyTodoListInsertion.currentState
+                                .validate()) {
                               setState(() {
                                 // Add Checkbox
                                 todoList.listCheckbox.add(CheckBox(
                                   elemanTextTodoList.text,
                                   false,
                                 ));
-
                               });
                               print(elemanTextTodoList.text);
                               print(todoList.listCheckbox);
@@ -949,7 +1053,6 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                   ),
                 ),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -963,7 +1066,8 @@ class _MyHomePageState extends State<MyHomePage>
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(80.0)),
                         padding: EdgeInsets.all(0),
                         child: Ink(
                           decoration: BoxDecoration(
@@ -972,10 +1076,10 @@ class _MyHomePageState extends State<MyHomePage>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(50.0)
-                          ),
+                              borderRadius: BorderRadius.circular(50.0)),
                           child: Container(
-                            constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                            constraints: BoxConstraints(
+                                maxWidth: 150.0, minHeight: 50.0),
                             alignment: Alignment.center,
                             padding: EdgeInsets.all(10),
                             child: Text(
@@ -991,7 +1095,6 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                       ),
                     ),
-
                     Container(
                       margin: const EdgeInsets.only(
                         top: 20,
@@ -999,7 +1102,6 @@ class _MyHomePageState extends State<MyHomePage>
                       ),
                       child: RaisedButton(
                         onPressed: () {
-
                           // Check if valid
                           if (_formKeyTodoList.currentState.validate()) {
                             print(baslikTextTodoList.text);
@@ -1011,7 +1113,8 @@ class _MyHomePageState extends State<MyHomePage>
                             Navigator.pop(context);
                           }
                         },
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(80.0)),
                         padding: EdgeInsets.all(0.0),
                         child: Ink(
                           decoration: BoxDecoration(
@@ -1020,10 +1123,10 @@ class _MyHomePageState extends State<MyHomePage>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(50.0)
-                          ),
+                              borderRadius: BorderRadius.circular(50.0)),
                           child: Container(
-                            constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                            constraints: BoxConstraints(
+                                maxWidth: 150.0, minHeight: 50.0),
                             alignment: Alignment.center,
                             padding: EdgeInsets.all(10),
                             child: Text(
@@ -1039,14 +1142,11 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                       ),
                     ),
-
                   ],
                 ),
-
               ],
             ),
           );
-        }
-    );
+        });
   }
 }

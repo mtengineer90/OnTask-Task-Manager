@@ -30,6 +30,8 @@ dependencies:
   flutter_colorpicker: ^0.3.4
   font_awesome_flutter: 8.8.1
   intl: ^0.16.1
+  uuid: 2.0.4
+  dotted_border: ^1.0.5
 
   # Home icon of the app
   flutter_launcher_icons: "^0.7.3"

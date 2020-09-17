@@ -15,6 +15,11 @@ class Gorev extends Icerik{
 
   @override
   String getAciklama() {
+
+    if(secured==true){
+      return "Kilitli Görev";
+    }
+
     if(this.sonZaman != null) {
       return "${sonZaman.difference(DateTime.now()).inHours} hours left";
     } else {
@@ -24,6 +29,9 @@ class Gorev extends Icerik{
 
   @override
   IconData getIcon() {
+    if(secured==true){
+      return EkleIcon.kilit;
+    }
     return EkleIcon.dokuman;
   }
 }

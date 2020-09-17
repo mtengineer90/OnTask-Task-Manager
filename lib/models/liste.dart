@@ -13,6 +13,9 @@ class Liste extends Icerik{
   }
   @override
   String getAciklama() {
+    if(secured==true){
+      return "Kilitli Liste";
+    }
 
     int counterDone = this.listCheckbox.where((cb) => cb.isChecked == true).toList().length;
 
@@ -21,6 +24,11 @@ class Liste extends Icerik{
 
   @override
   IconData getIcon() {
+
+    if(secured==true){
+      return EkleIcon.kilit;
+    }
+
     return EkleIcon.liste;
   }
 }

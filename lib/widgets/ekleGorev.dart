@@ -40,6 +40,13 @@ class EkleGorevState extends State<EkleGorev>
     });
   }
 
+  void koru(){
+    setState(() {
+      widget.item.secured = !widget.item.secured;
+    });
+  }
+
+
   void hatirlat() {
     print(widget.item.sonZaman);
 
@@ -226,11 +233,10 @@ class EkleGorevState extends State<EkleGorev>
           ),
 
           IconButton(
-            icon: (widget.item.favori ? Icon(Icons.lock_outline) : Icon(Icons.lock_open)),
+            icon: (widget.item.secured ? Icon(EkleIcon.kilit) : Icon(EkleIcon.anahtar)),
             color: RenkPaleti.ACIK_KIRMIZI,
             onPressed: () {
-              /// TODO: Sfre Model
-              this.fav();
+              this.koru();
             },
           ),
 
@@ -431,7 +437,7 @@ class EkleGorevState extends State<EkleGorev>
                           alignment: Alignment.center,
                           padding: EdgeInsets.all(10),
                           child: Text(
-                            'Oluştur',
+                            'Kaydet',
                             style: TextStyle(
                               fontSize: 27,
                               fontFamily: "Roboto",

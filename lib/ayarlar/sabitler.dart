@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+class Ayarlar{
+  static String NORMAL = "normal";
+  static String FAVORI = "favori";
+  static String SILINEN = "silinen";
+}
+
 class RenkPaleti {
 
       static Color colorStart = Colors.blue[900];
